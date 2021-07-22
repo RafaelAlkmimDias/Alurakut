@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainGrid from '../src/components/MainGrid';
 import Box from '../src/components/Box';
 import { AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet } from '../src/lib/AlurakutCommons'
 import { ProfileRelationsBoxWrapper } from '../src/components/ProfileRelationsBoxWrapper';
 import ProfileRelations from '../src/components/ProfileRelations';
+import { getFollowers } from '../src/services/Communication'
 
 function ProfileSideBar({ githubUser }){
   return (
@@ -24,7 +25,7 @@ function ProfileSideBar({ githubUser }){
 }
 
 export default function Home() {
-  const githubUser = 'RafaelAlkmimDias';
+  const githubUser = 'omariosouto';
   const confiavel = 3;
   const legal = 3;
   const sexy = 3;
@@ -79,6 +80,7 @@ export default function Home() {
   ];
   
   const [comunidades, setComunidades] = useState([]);
+  const [followers, setFollowers] = useState([])
 
   const createCommunityHandler = (event) => {
     event.preventDefault();
@@ -95,6 +97,26 @@ export default function Home() {
     ])
     
   }
+
+  const getAndTreatFollowers = async () => {
+    const gotFollowers = await getFollowers(githubUser);
+    console.log(gotFollowers);
+    const treatedFollowers = gotFollowers.map( follower => {
+      const url = `https://github.com/${follower.login}`
+      return {
+        id: follower.id,
+        link: url,
+        image: follower.avatar_url,
+        title: follower.login
+      }
+    })
+
+    setFollowers(treatedFollowers)
+  }
+
+  useEffect( () => {
+    getAndTreatFollowers();
+  }, [])
 
   return (
     <>
@@ -160,8 +182,9 @@ export default function Home() {
           </Box>
         </div>
         <div className="profileRelationsArea" style={{ gridArea: 'profileRelationsArea' }}>
-          <ProfileRelations title="Pessoas da comunidade" list={pessoasFavoritas} />
           <ProfileRelations title="Comunidades" list={comunidades} />
+          <ProfileRelations title="Pessoas da comunidade" list={pessoasFavoritas} />
+          <ProfileRelations title="Seguidores" list={followers} />
         </div>
       </MainGrid>
     </>
