@@ -4,7 +4,7 @@ import Box from '../src/components/Box';
 import { AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet } from '../src/lib/AlurakutCommons'
 import { ProfileRelationsBoxWrapper } from '../src/components/ProfileRelationsBoxWrapper';
 import ProfileRelations from '../src/components/ProfileRelations';
-import { getFollowers } from '../src/services/Communication'
+import { getFollowers, getCommunities, postCommunities } from '../src/services/Communication'
 
 function ProfileSideBar({ githubUser }){
   return (
@@ -82,25 +82,33 @@ export default function Home() {
   const [comunidades, setComunidades] = useState([]);
   const [followers, setFollowers] = useState([])
 
-  const createCommunityHandler = (event) => {
+  const createCommunityHandler = async (event) => {
     event.preventDefault();
     const dados = new FormData(event.target);
+
+    const record = await postCommunities({
+      title:  dados.get('title'),
+      user: githubUser,
+      link: dados.get('url'),
+      imageUrl: dados.get('image')
+    })
+
+    console.log(record)
+    if(record){
+      setComunidades([
+        ...comunidades,
+        record
+      ])
+    }
+
+    console.log(comunidades)
     
-    setComunidades([
-      ...comunidades,
-      {
-        id: new Date().toISOString(),
-        title:  dados.get('title'),
-        link: dados.get('url'),
-        image: dados.get('image')
-      }
-    ])
     
   }
 
   const getAndTreatFollowers = async () => {
     const gotFollowers = await getFollowers(githubUser);
-    console.log(gotFollowers);
+
     const treatedFollowers = gotFollowers.map( follower => {
       const url = `https://github.com/${follower.login}`
       return {
@@ -111,11 +119,26 @@ export default function Home() {
       }
     })
 
-    setFollowers(treatedFollowers)
+    setFollowers(treatedFollowers);
+  }
+  const getAndTreatCommunities = async () => {
+    const gotCommunities = await getCommunities(githubUser);
+
+    const treatedCommunities = gotCommunities.map( community => {
+      return {
+        id: community.id,
+        link: community.link,
+        image: community.imageUrl,
+        title: community.title
+      }
+    })
+
+    setComunidades(treatedCommunities);
   }
 
   useEffect( () => {
     getAndTreatFollowers();
+    getAndTreatCommunities();
   }, [])
 
   return (
