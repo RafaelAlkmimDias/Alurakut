@@ -2,6 +2,7 @@
 
 ## Site realizado em next durante imersão da alura imitando o orkut, mas usando a api do github e o datocms para apresentar os dados
 
+## pode ser visto em https://alurakut-base-pearl.vercel.app/login
 
 ## Funcionalidades presentes na imersão
 
@@ -18,6 +19,8 @@
 ## próximas implementações
 
 * coletar apenas comunidades daquele usuario
+* mensagem de erro no login
+* apresentação de loading de dados ou página
 * fazer páginas de amigos
 * fazer página de seguidores
 * fazer página de comunidades
