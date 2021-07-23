@@ -20,6 +20,39 @@ export const getFollowers = ( user ) => {
     return followers;
 }
 
+export const getUserExists = ( user ) => {
+    const url = `https://api.github.com/users/${user}`
+
+    const userExists =  fetch(url)
+    .then( (response) => {
+        return response.ok;
+    })
+
+    return userExists;
+}
+
+export const getGitInfo = ( user ) => {
+    const url = `https://api.github.com/users/${user}`
+
+    const userInfo =  fetch(url)
+    .then( (response) => {
+        if(response.ok){
+            return response.json()
+        } 
+
+        throw new Error('network error ocurred' + response.status);
+    })
+    .then( (data) => {
+        return data
+    })
+    .catch((err) => {
+        console.error(err)
+        return []
+    })
+
+    return userInfo;
+}
+
 export const getCommunities = ( user ) => {
 
     const url = `https://graphql.datocms.com/`
@@ -96,4 +129,64 @@ export const postCommunities = async ( data ) => {
     })
 
     return post;
+}
+
+export const postLogin = ( githubUser ) => {
+    const url = 'https://alurakut.vercel.app/api/login';
+    const headers = {
+        'Content-Type': 'application/json'
+    }
+    const body = {
+        githubUser: githubUser
+    }
+
+    const data = fetch(url,{
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body)
+    })
+    .then( (response) => {
+        if(response.ok){
+            return response.json();
+        }
+        throw new Error('network error ocurred' + response.status);
+    })
+    .then( ( completeRespose ) => {
+        return completeRespose.token
+    })
+    .catch( (err) => {
+        console.error(err)
+        return false;
+    })
+
+    return data;
+
+} 
+
+export const getAuth = ( token ) => {
+    const url = 'localhost:3000/api/validate_user';
+    const header = {
+        Authorization: token
+    }
+    const auth = fetch(url, {
+        headers: header
+    })
+    .then( (response) => {
+        console.log('response',response)
+        if(response.ok){
+            return response.json();
+        }
+        throw new Error('network error ocurred' + response.status);
+    })
+    .then( (completeResponse) => {
+        console.log('completeResponse',completeResponse)
+        return completeResponse.exists
+    })
+    .catch( (err) => {
+        console.error(err)
+        return false;
+    })
+
+    return auth;
+
 }
