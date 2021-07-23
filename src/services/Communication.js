@@ -20,6 +20,28 @@ export const getFollowers = ( user ) => {
     return followers;
 }
 
+export const getFollowing = ( user ) => {
+    const url = `https://api.github.com/users/${user}/following`
+
+    const following =  fetch(url)
+    .then( (response) => {
+        if(response.ok){
+            return response.json()
+        } 
+
+        throw new Error('network error ocurred' + response.status);
+    })
+    .then( (data) => {
+        return data
+    })
+    .catch((err) => {
+        console.error(err)
+        return []
+    })
+
+    return following;
+}
+
 export const getUserExists = ( user ) => {
     const url = `https://api.github.com/users/${user}`
 
@@ -164,7 +186,7 @@ export const postLogin = ( githubUser ) => {
 } 
 
 export const getAuth = ( token ) => {
-    const url = 'localhost:3000/api/validate_user';
+    const url = 'https://alurakut-base-rafaelalkmimdias.vercel.app/api/validate_user';
     const header = {
         Authorization: token
     }
@@ -172,14 +194,12 @@ export const getAuth = ( token ) => {
         headers: header
     })
     .then( (response) => {
-        console.log('response',response)
         if(response.ok){
             return response.json();
         }
         throw new Error('network error ocurred' + response.status);
     })
     .then( (completeResponse) => {
-        console.log('completeResponse',completeResponse)
         return completeResponse.exists
     })
     .catch( (err) => {

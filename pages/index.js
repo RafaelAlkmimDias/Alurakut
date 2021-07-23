@@ -4,7 +4,15 @@ import Box from '../src/components/Box';
 import { AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet } from '../src/lib/AlurakutCommons'
 import { ProfileRelationsBoxWrapper } from '../src/components/ProfileRelationsBoxWrapper';
 import ProfileRelations from '../src/components/ProfileRelations';
-import { getFollowers, getCommunities, postCommunities } from '../src/services/Communication'
+import { 
+  getFollowers, 
+  getCommunities, 
+  postCommunities, 
+  getAuth, 
+  getFollowing 
+} from '../src/services/Communication';
+import nookies from 'nookies';
+import jwt from 'jsonwebtoken';
 
 function ProfileSideBar({ githubUser }){
   return (
@@ -24,8 +32,8 @@ function ProfileSideBar({ githubUser }){
   )
 }
 
-export default function Home() {
-  const githubUser = 'omariosouto';
+export default function Home( props ) {
+  const githubUser = props.githubUser;
   const confiavel = 3;
   const legal = 3;
   const sexy = 3;
@@ -34,53 +42,10 @@ export default function Home() {
   const videos = 2 
   const fas = 5
   const mensagens = 10
-  const pessoasFavoritas = [
-    {
-      id: 1,
-      title: 'juunegreiros',
-      link: `/users/juunegreiros`,
-      image: `https://github.com/juunegreiros.png`
-    },
-    {
-      id: 2,
-      title: 'peas',
-      link: `/users/peas`,
-      image: `https://github.com/peas.png`
-    },
-    {
-      id: 3,
-      title: 'omariosouto',
-      link: `/users/omariosouto`,
-      image: `https://github.com/omariosouto.png`
-    },
-    {
-      id: 4,
-      title: 'rafaballerini',
-      link: `/users/rafaballerini`,
-      image: `https://github.com/rafaballerini.png`
-    },
-    {
-      id: 5,
-      title: 'marcobrunodev',
-      link: `/users/marcobrunodev`,
-      image: `https://github.com/marcobrunodev.png`
-    },
-    {
-      id: 6,
-      title: 'felipefialho',
-      link: `/users/felipefialho`,
-      image: `https://github.com/felipefialho.png`
-    },
-    {
-      id: 7,
-      title: 'omariosouto',
-      link: `/users/omariosouto`,
-      image: `https://github.com/omariosouto.png`
-    }
-  ];
   
   const [comunidades, setComunidades] = useState([]);
   const [followers, setFollowers] = useState([])
+  const [following, setFollowing] = useState([])
 
   const createCommunityHandler = async (event) => {
     event.preventDefault();
@@ -93,16 +58,12 @@ export default function Home() {
       imageUrl: dados.get('image')
     })
 
-    console.log(record)
     if(record){
       setComunidades([
         ...comunidades,
         record
       ])
     }
-
-    console.log(comunidades)
-    
     
   }
 
@@ -120,6 +81,23 @@ export default function Home() {
     })
 
     setFollowers(treatedFollowers);
+  }
+
+  const getAndTreatFollowings = async () => {
+    const gotFollowing = await getFollowing(githubUser);
+
+    const treatedFollowing = gotFollowing.map( following => {
+      const url = `https://github.com/${following.login}`
+      return {
+        id: following.id,
+        link: url,
+        image: following.avatar_url,
+        title: following.login
+      }
+    })
+
+    setFollowing(treatedFollowing);
+    
   }
   const getAndTreatCommunities = async () => {
     const gotCommunities = await getCommunities(githubUser);
@@ -139,6 +117,7 @@ export default function Home() {
   useEffect( () => {
     getAndTreatFollowers();
     getAndTreatCommunities();
+    getAndTreatFollowings();
   }, [])
 
   return (
@@ -206,10 +185,32 @@ export default function Home() {
         </div>
         <div className="profileRelationsArea" style={{ gridArea: 'profileRelationsArea' }}>
           <ProfileRelations title="Comunidades" list={comunidades} />
-          <ProfileRelations title="Pessoas da comunidade" list={pessoasFavoritas} />
+          <ProfileRelations title="Seguindo" list={following} />
           <ProfileRelations title="Seguidores" list={followers} />
         </div>
       </MainGrid>
     </>
   );
+}
+
+export async function getServerSideProps(context){
+  const cookies = nookies.get(context)
+  const token = cookies.USER_TOKEN
+  const auth = await getAuth(token)
+  if(!auth){
+    return {
+      redirect:{
+        destination: '/login',
+        permanent: false
+      }
+    }
+  }
+
+  const decodedInfo = jwt.decode(token)
+
+  return {
+    props: {
+      githubUser: decodedInfo.githubUser
+    },
+  }
 }
